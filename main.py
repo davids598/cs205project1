@@ -108,6 +108,36 @@ def search_puzzle(beginning_pos, heuristic_choice):
             max_queue_size = len(frontier)
 
 def heuristicAlgo(node, choice, correct, ROW_SIZE, COL_SIZE):
+    #Uniform Cost Search (h(n) = 0)        f(n) = g(n) + h(n)
+    curr_state = node.state
+    if choice == "1":
+        return node.depth
+
+    #A* with misplaced tile heuristic
+    elif choice == "2":
+        count = 0
+        for x in range(len(correct)):
+            if curr_state[x] != correct[x] and correct[x] != " ":  # goal_state = ['1', '2', '3', '4', '5', '6', '7', '8', ' ']
+                count += 1
+        return count + node.depth
+
+    #A* with Manhattan distance
+    else:
+        #weights equal to current node depth + all errors of every value within a particular state
+        curr_depth_weight = node.depth
+        #Now need to calculate errors for all elements in our state
+        state_pos_error = 0
+        #Replace space with 0 for searching
+        curr_state_man = node.state.copy()
+        index = curr_state_man.index(' ')
+        curr_state_man[index] = '0'
+        for i in range(len(correct)):
+            if curr_state[i] != correct[i]:
+                state_pos_error += calculateElementError(i, curr_state_man[i], ROW_SIZE, COL_SIZE)
+        return curr_depth_weight + state_pos_error
+
+
+def calculateElementError(i, valAtElement, ROW_SIZE, COL_SIZE):
     return
 
 def generate_states(temp_pos, ROW_SIZE, COL_SIZE):
