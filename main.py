@@ -50,7 +50,7 @@ def readInput():
         beginning_pos = ['1', '3', '6', '5', ' ', '2', '4', '7', '8']
 
     print("Select your choice of algorithm")
-    print("(1) Uniform Cost Search\n(2) A* with Misplaced Tile Heuristic\n(3) A* with the Manhattan distance heuristic")
+    print("(1) Uniform Cost Search\n(2) A* with Misplaced Tile Heuristic\n(3) A* with the Manhattan distance Heuristic")
     heuristic_choice = input()
     return beginning_pos, heuristic_choice
 
@@ -138,10 +138,69 @@ def heuristicAlgo(node, choice, correct, ROW_SIZE, COL_SIZE):
 
 
 def calculateElementError(i, valAtElement, ROW_SIZE, COL_SIZE):
-    return
+    correct = ['1', '2', '3', '4', '5', '6', '7', '8', '0']
+    #Must find actual position of this element in the vector
+    #Calculate distance between current position and proper position
+    proper_pos = correct.index(valAtElement)
+    
+    #Location variable row and column
+    curr_row = i / ROW_SIZE
+    curr_col = i % COL_SIZE
+
+    proper_pos_row = proper_pos % ROW_SIZE
+    proper_pos_col = proper_pos / COL_SIZE
+
+    x_axis_difference = abs(curr_col - proper_pos_col)
+    y_axis_difference = abs(curr_row - proper_pos_row)
+
+    return x_axis_difference + y_axis_difference
 
 def generate_states(temp_pos, ROW_SIZE, COL_SIZE):
-    return
+    curr_pos = temp_pos.copy()
+    potential_states = []
+    #Get the position of the blank for future checks
+    index = curr_pos.index(' ')
+
+    #Check if I can 'slide' a nearby tile into the blank, if such a position exists
+    pullTop = False
+    pullLeft = False
+    pullRight = False
+    pullBot = False
+
+    if index >= ROW_SIZE:
+        pullTop = True
+
+    if (index <= (COL_SIZE * ROW_SIZE - 1 - ROW_SIZE)):
+        pullBot = True
+
+    if (index % ROW_SIZE != 0):
+        pullLeft = True
+
+    if (index % ROW_SIZE != (ROW_SIZE - 1)):
+        pullRight = True
+
+    #All these cases involving swapping the blank with a valid tile, putting that new state in the pot states array, then swapping back for the next check
+    if pullTop:
+        curr_pos[index - ROW_SIZE], curr_pos[index] = curr_pos[index], curr_pos[index - ROW_SIZE]
+        potential_states.append(curr_pos.copy())
+        curr_pos[index - ROW_SIZE], curr_pos[index] = curr_pos[index], curr_pos[index - ROW_SIZE]
+
+    if pullLeft:
+        curr_pos[index - 1], curr_pos[index] = curr_pos[index], curr_pos[index - 1]
+        potential_states.append(curr_pos.copy())
+        curr_pos[index - 1], curr_pos[index] = curr_pos[index], curr_pos[index - 1]
+
+    if pullRight:
+        curr_pos[index], curr_pos[index + 1] = curr_pos[index + 1], curr_pos[index]
+        potential_states.append(curr_pos.copy())
+        curr_pos[index], curr_pos[index + 1] = curr_pos[index + 1], curr_pos[index]
+
+    if pullBot:
+        curr_pos[index], curr_pos[index + ROW_SIZE] = curr_pos[index + ROW_SIZE], curr_pos[index]
+        potential_states.append(curr_pos.copy())
+        curr_pos[index], curr_pos[index + ROW_SIZE] = curr_pos[index + ROW_SIZE], curr_pos[index]
+
+    return potential_states
 
 
 if __name__ == '__main__':
