@@ -1,4 +1,4 @@
-import heapq as q
+import heapq as q #Used this instead of my own to prevent extra bugs
 
 class Node():
     def __init__(self) -> None:
@@ -56,37 +56,42 @@ def readInput():
 
 #Now begin the graph search, return a solution or failure
 def search_puzzle(beginning_pos, heuristic_choice):
-    num_nodes_expanded = 0
-    max_queue_size = 0
+    num_nodes_expanded = 0 #Variable and frontier setup
+    max_queue_size = 0 #This is problem.INITIAL-STATE in general search algo
     ROW_SIZE = 3
     COL_SIZE = 3
     goal_state = ['1', '2', '3', '4', '5', '6', '7', '8', ' ']
     frontier = [] #Will be used with q to be a priority queue
     #Set up root node
-    node = Node()
+    node = Node() #MADE-NODE in general search algo
     node.setState(beginning_pos)
     node.setWeight(0) 
+    #MAKE-QUEUE in general algo
     q.heappush(frontier, (node.weight, node)) #Set up min priority queue for frontier
     max_queue_size = 1
     explored_set = []
 
-    while True:
+    while True: #Main loop
         if len(frontier) == 0:
-            print("Failure has occured")
+            print("Failure has occured") #Terminate when frontier is empty, no results found
         
-        smallest_val = q.heappop(frontier)[1]
+        smallest_val = q.heappop(frontier)[1] #REMOVE-FRONT
         num_nodes_expanded += 1
         #If node contains a goal state, then return the corresponding solution
-        if smallest_val.state == goal_state:
+        if smallest_val.state == goal_state: #GOAL-TEST
+
+            #All this is just to print out a trace of the different states from final node to original parent
             loop_node = smallest_val
             parent_list = []
             while loop_node.parent != None:
                 parent_list.append(loop_node)
                 loop_node = loop_node.parent
-            parent_initial_state = Node()
+            parent_initial_state = Node() #Need to get final state after loop, little inefficient but this only runs once
             parent_initial_state.setState(beginning_pos)
             parent_list.append(parent_initial_state)
             parent_list.reverse()
+
+            #Output at end of trace
             for x in parent_list:
                 print(str(x.state) + "\n")
             print("Max queue size was " + str(max_queue_size) + "\nThe number of expanded nodes was " + str(num_nodes_expanded))
@@ -94,17 +99,17 @@ def search_puzzle(beginning_pos, heuristic_choice):
             return
         #Add the node to the explored set
         state_list = []
-        state_list = generate_states(smallest_val.state, ROW_SIZE, COL_SIZE)
+        state_list = generate_states(smallest_val.state, ROW_SIZE, COL_SIZE) #EXPAND(node, problem.operators)
         for x in state_list: #Expand the chosen node, adding the resulting nodes to the frontier (ONLY IF NOT IN THE FRONTIER OR EXPLORED SET)
-            if x not in explored_set:
+            if x not in explored_set: #QUEUEING-FUNCTION
                 node = Node()
                 node.setState(x)
                 node.setParent(smallest_val)
                 node.setDepth(node.parent.depth + 1)
-                node.setWeight(heuristicAlgo(node, heuristic_choice, goal_state, ROW_SIZE, COL_SIZE))
+                node.setWeight(heuristicAlgo(node, heuristic_choice, goal_state, ROW_SIZE, COL_SIZE)) #Calculate weight of new node
                 explored_set.append(x)
                 q.heappush(frontier, (node.weight, node))
-        if max_queue_size < len(frontier):
+        if max_queue_size < len(frontier): #Update values
             max_queue_size = len(frontier)
 
 def heuristicAlgo(node, choice, correct, ROW_SIZE, COL_SIZE):
@@ -127,11 +132,11 @@ def heuristicAlgo(node, choice, correct, ROW_SIZE, COL_SIZE):
         curr_depth_weight = node.depth
         #Now need to calculate errors for all elements in our state
         state_pos_error = 0
-        #Replace space with 0 for searching
+        #Replace space with 0 for searching, was getting bugs
         curr_state_man = node.state.copy()
         index = curr_state_man.index(' ')
         curr_state_man[index] = '0'
-        for i in range(len(correct)):
+        for i in range(len(correct)): #Go through puzzle and sum up all errors
             if curr_state[i] != correct[i]:
                 state_pos_error += calculateElementError(i, curr_state_man[i], ROW_SIZE, COL_SIZE)
         return curr_depth_weight + state_pos_error
@@ -150,13 +155,13 @@ def calculateElementError(i, valAtElement, ROW_SIZE, COL_SIZE):
     proper_pos_row = proper_pos % ROW_SIZE
     proper_pos_col = proper_pos / COL_SIZE
 
-    x_axis_difference = abs(curr_col - proper_pos_col)
+    x_axis_difference = abs(curr_col - proper_pos_col) #Get abs of current and correct pos to calculate manhattan error
     y_axis_difference = abs(curr_row - proper_pos_row)
 
-    return x_axis_difference + y_axis_difference
+    return x_axis_difference + y_axis_difference # just sum x and y axis errors
 
 def generate_states(temp_pos, ROW_SIZE, COL_SIZE):
-    curr_pos = temp_pos.copy()
+    curr_pos = temp_pos.copy() #Did this to prevent any object memory errors
     potential_states = []
     #Get the position of the blank for future checks
     index = curr_pos.index(' ')
@@ -167,24 +172,24 @@ def generate_states(temp_pos, ROW_SIZE, COL_SIZE):
     pullRight = False
     pullBot = False
 
-    if index >= ROW_SIZE:
+    if index >= ROW_SIZE: #If not on top row
         pullTop = True
 
-    if (index <= (COL_SIZE * ROW_SIZE - 1 - ROW_SIZE)):
+    if (index <= (COL_SIZE * ROW_SIZE - 1 - ROW_SIZE)): #If now on bottom row
         pullBot = True
 
-    if (index % ROW_SIZE != 0):
+    if (index % ROW_SIZE != 0): #If not on left column
         pullLeft = True
 
-    if (index % ROW_SIZE != (ROW_SIZE - 1)):
+    if (index % ROW_SIZE != (ROW_SIZE - 1)): #If not on right column
         pullRight = True
 
     #All these cases involving swapping the blank with a valid tile, putting that new state in the pot states array, then swapping back for the next check
     if pullTop:
-        curr_pos[index - ROW_SIZE], curr_pos[index] = curr_pos[index], curr_pos[index - ROW_SIZE]
-        potential_states.append(curr_pos.copy())
-        curr_pos[index - ROW_SIZE], curr_pos[index] = curr_pos[index], curr_pos[index - ROW_SIZE]
-
+        curr_pos[index - ROW_SIZE], curr_pos[index] = curr_pos[index], curr_pos[index - ROW_SIZE] #swap positions
+        potential_states.append(curr_pos.copy()) #copy new pos to list
+        curr_pos[index - ROW_SIZE], curr_pos[index] = curr_pos[index], curr_pos[index - ROW_SIZE] #Return to original pos
+    #Repeat for all other booleans
     if pullLeft:
         curr_pos[index - 1], curr_pos[index] = curr_pos[index], curr_pos[index - 1]
         potential_states.append(curr_pos.copy())
